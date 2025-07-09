@@ -17,13 +17,13 @@ class Player : public Node, public PhysicsObject {
 	std::vector<PersonalPhysicsStats *> colliding;
 
 	const float scaleFactor = 3;
-	sf::Vector2f enterPoint = sf::Vector2f(0,0);
-	sf::Vector2f startPoint = sf::Vector2f(0,0);
+	Vector2f enterPoint = Vector2f(0,0);
+	Vector2f startPoint = Vector2f(0,0);
 
-	sf::RectangleShape textShape;
-	sf::Text text;
-	DrawNode *textBackground;
-	DrawNode *textNode;
+	//sf::RectangleShape textShape;
+	//sf::Text text;
+	Node *textBackground;
+	Node *textNode;
 	bool textVisible = false;
 
 	GridSection *section = NULL;
@@ -34,17 +34,14 @@ class Player : public Node, public PhysicsObject {
 	float zoomLevel = 3.0;
 	float zoomTarget = 3.0;
 
-	sf::Vector2f lowCorner = sf::Vector2f(0,0);
-	sf::Vector2f highCorner = sf::Vector2f(0,0);
-	sf::Vector2f center = sf::Vector2f(0,0);
+	Vector2f lowCorner = Vector2f(0,0);
+	Vector2f highCorner = Vector2f(0,0);
+	Vector2f center = Vector2f(0,0);
 
 	int frameWidth = 0;
 	int frameHeight = 0;
 	int animationSet = 0;
-    int maxFrames = 0;
-    int frame = 0;
-    double nextTime = 0;
-    double delay = -1;
+    FrameTimer timer;
 
 public:
 	Node *background1 = NULL;
@@ -52,30 +49,30 @@ public:
 	Node *background3 = NULL;
 	Node *background4 = NULL;
 
-	Player(Indexer *_collisionOn, Indexer *_collisionOff, Indexer *_friction, sf::Font *font) :
-	Node(PLAYER, sf::Vector2i(22, 29)), collisionOn(_collisionOn), collisionOff(_collisionOff),
-		moveInput("/movement", INPUT, this), miscInput(miscLayout, INPUT, this), frictionMap(_friction) {
+	Player(Indexer *_collisionOn, Indexer *_collisionOff, Indexer *_friction) :
+	Node(PLAYER, Vector2i(22, 29)), collisionOn(_collisionOn), collisionOff(_collisionOff),
+		moveInput("/movement", INPUT, this), miscInput(miscLayout, INPUT, this), frictionMap(_friction), timer(8, 0.1) {
 
-		textShape.setFillColor(sf::Color(0,0,0,200));
-		text.setFont(*font);
-		text.setCharacterSize(25);
-		text.setFillColor(sf::Color::White);
-		textBackground = new DrawNode(textShape, TEXT, sf::Vector2i(16, 16), this);
-		textBackground->setHidden();
-		textNode = new DrawNode(text, TEXT, sf::Vector2i(16, 16), textBackground);
-		textNode->setPosition(sf::Vector2f(14, 6));
+		//textShape.setFillColor(sf::Color(0,0,0,200));
+		//text.setFont(*font);
+		//text.setCharacterSize(25);
+		//text.setFillColor(sf::Color::White);
+		textBackground = new Node(TEXT, Vector2i(16, 16), true, this);
+		textBackground->setColor(skColor(0,0,0,200));
+		textBackground->setTexture(solidTexture);
+		textNode = new Node(TEXT, Vector2i(16, 16), false, textBackground);
+		textNode->setPosition(Vector2f(14, 6));
+		textNode->setSize(Vector2i(25, 25));
 		UpdateList::addNode(textBackground);
 		UpdateList::addNode(textNode);
 
 		frameWidth = 22;
 		frameHeight = 29;
-		maxFrames = 8;
-		delay = 0.1;
 
-		lowCorner = sf::Vector2f(0, _collisionOff->getSize().y * _collisionOff->getScale().y);
+		lowCorner = Vector2f(0, _collisionOff->getSize().y * _collisionOff->getScale().y);
 		//lowCorner.y = std::max(lowCorner.y, 4096.0f);
-		highCorner = sf::Vector2f(_collisionOff->getSize().x * _collisionOff->getScale().x * 1.5, 0);
-		center = sf::Vector2f(highCorner.x / 2, lowCorner.y / 2);
+		highCorner = Vector2f(_collisionOff->getSize().x * _collisionOff->getScale().x * 1.5, 0);
+		center = Vector2f(highCorner.x / 2, lowCorner.y / 2);
 		std::cout << _collisionOff->getSize().x * _collisionOff->getScale().x << "," << _collisionOff->getSize().y * _collisionOff->getScale().y << "\n";
 
 		Player *_player = this;
@@ -89,12 +86,15 @@ public:
 				UpdateList::sendSignal(MENU, TOGGLE_MENU, _player->section);
 			}
 		};
-		camera = new Node(INPUT, sf::Vector2i(450, 250), true, this);
-		UpdateList::setCamera(_player->camera, sf::Vector2f(450, 250) * zoomLevel);
+		camera = new Node(INPUT, Vector2i(450, 250), true, this);
+		camera->setScale(camera->getScale(), false);
+		UpdateList::setCamera(_player->camera, Vector2f(450, 250) * zoomLevel);
 
-		setScale(sf::Vector2f(scaleFactor, scaleFactor));
+		setScale(Vector2f(scaleFactor, scaleFactor));
 		physics->snapSpeed = 6;
 		physics->weight = 0.01;
+
+		setTextureIntRect(IntRect(0, animationSet * frameHeight, frameWidth, frameHeight));
 
 		collideWith(BOX);
 		collideWith(SECTION);
@@ -102,10 +102,10 @@ public:
 	}
 
 	void update(double time) {
-		if(startPoint == sf::Vector2f(0,0)) {
+		if(startPoint == Vector2f(0,0)) {
 			startPoint = getPosition();
 			if(Settings::getBool("/save/active")) {
-				sf::Vector2f target = sf::Vector2f(0,0);
+				Vector2f target = Vector2f(0,0);
 				target.x = Settings::getInt("/save/x");
 				target.y = Settings::getInt("/save/y");
 				setPosition(target);
@@ -115,12 +115,12 @@ public:
 		bool tempPlatforms = section != NULL && (section->trigger != section->invertTrigger);
 		Indexer *collision = tempPlatforms ? collisionOn : collisionOff;
 
-		sf::Vector2f input = moveInput.getDirection();
+		Vector2f input = moveInput.getDirection();
 		bool jumpInput = input.y < -0.5;
-		sf::Vector2f velocity = sf::Vector2f(input.x * time * 320.0f, 0);
-		velocity = PlatformFrictionMovement(getPosition(), velocity, getSize(), time,
+		Vector2f velocity = Vector2f(input.x * time * 320.0f, 0);
+		velocity = platformFrictionMovement(getPosition(), velocity, getSize(), time,
 			physics->previous, collision, frictionMap, frictionValue, globalPhysics);
-		velocity = PlatformGravityMovement(getPosition(), velocity, getSize(), time, jumpInput,
+		velocity = platformGravityMovement(getPosition(), velocity, getSize(), time, jumpInput,
 			collision, globalPhysics, physics, colliding);
 		setPosition(getPosition() + velocity);
 		colliding.clear();
@@ -131,44 +131,36 @@ public:
 
 		//Flip horizontally
 		if(velocity.x < 0)
-			setScale(sf::Vector2f(-scaleFactor, scaleFactor));
+			setScale(Vector2f(-scaleFactor, scaleFactor));
 		else if(velocity.x > 0)
-			setScale(sf::Vector2f(scaleFactor, scaleFactor));
+			setScale(Vector2f(scaleFactor, scaleFactor));
 
 		//Animation
 		if(input.y < -0.5 && velocity.y < -0.2) {
 			if(animationSet != 2) {
-				frame = 0;
+				timer.frame = 0;
 				animationSet = 2;
 			}
-		} else if(velocity.y > 5 || (input.y < -0.5 && animationSet == 2 && frame > 2)) {
+		} else if(velocity.y > 5 || (input.y < -0.5 && animationSet == 2 && timer.frame > 2)) {
 			if(animationSet != 2) {
-				frame = 3;
+				timer.frame = 3;
 				animationSet = 2;
 			}
 		} else if(std::abs(input.x) > 0.1) {
 			if(animationSet != 1) {
-				frame = 0;
+				timer.frame = 0;
 				animationSet = 1;
 			}
 		} else
 			animationSet = 0;
 
-		if((nextTime -= time) <= 0) {
-            nextTime = delay;
-            frame++;
-
-            //Reset to start frame
-            if(frame == maxFrames)
-                frame = 0;
-
-            setTextureRect(sf::IntRect(frameWidth * frame, animationSet * frameHeight, frameWidth, frameHeight));
-        }
+		if(timer.next(time))
+            setTextureIntRect(IntRect(frameWidth * timer.frame, animationSet * frameHeight, frameWidth, frameHeight));
 
 		//Slide camera
-		if(camera->getPosition() != sf::Vector2f(0,-64 / scaleFactor)) {
-			sf::Vector2f target = sf::Vector2f(0,-64 / scaleFactor) - camera->getPosition();
-			sf::Vector2f target2 = vectorLength(target, 400 * time);
+		if(camera->getPosition() != Vector2f(0,-64 / scaleFactor)) {
+			Vector2f target = Vector2f(0,-64 / scaleFactor) - camera->getPosition();
+			Vector2f target2 = vectorLength(target, 400 * time);
 			if(std::abs(target.x) > std::abs(target2.x) && std::abs(target.x) > std::abs(target2.x))
 				target = target2;
 			camera->setPosition(camera->getPosition() + target);
@@ -176,22 +168,22 @@ public:
 
 		//Place backgrounds
 		if(background1 != NULL) {
-			background1->setPosition(sf::Vector2f(lerp(center.x, camera->getGPosition().x, 0.85), lerp(center.y+600, camera->getGPosition().y+600, 0.85)));
-			background2->setPosition(sf::Vector2f(lerp(center.x, camera->getGPosition().x, 0.90), lerp(center.y+1500, camera->getGPosition().y+1500, 0.90)));
-			background3->setPosition(sf::Vector2f(lerp(center.x, camera->getGPosition().x, 0.95), lerp(center.y+1500, camera->getGPosition().y+1500, 0.95)));
-			background4->setPosition(sf::Vector2f(lerp(center.x, camera->getGPosition().x, 1), lerp(center.y, camera->getGPosition().y, 1)));
+			background1->setPosition(Vector2f(lerp(center.x, camera->getGPosition().x, 0.85), lerp(center.y+600, camera->getGPosition().y+600, 0.85)));
+			background2->setPosition(Vector2f(lerp(center.x, camera->getGPosition().x, 0.90), lerp(center.y+1500, camera->getGPosition().y+1500, 0.90)));
+			background3->setPosition(Vector2f(lerp(center.x, camera->getGPosition().x, 0.95), lerp(center.y+1500, camera->getGPosition().y+1500, 0.95)));
+			background4->setPosition(Vector2f(lerp(center.x, camera->getGPosition().x, 1), lerp(center.y, camera->getGPosition().y, 1)));
 
-			//background1->setScale(sf::Vector2f(1/0.7, 1/0.7));
-			background2->setScale(sf::Vector2f(1.3, 1.3));
-			background3->setScale(sf::Vector2f(1.3, 1.3));
-			background4->setScale(sf::Vector2f(1.3, 1.3));
+			//background1->setScale(Vector2f(1/0.7, 1/0.7));
+			background2->setScale(Vector2f(1.3, 1.3));
+			background3->setScale(Vector2f(1.3, 1.3));
+			background4->setScale(Vector2f(1.3, 1.3));
 		}
 
 		//Update zoom level
 		if(zoomLevel != zoomTarget) {
 			zoomTarget = std::clamp(-10.0f, zoomTarget, 10.0f);
 			zoomLevel += std::clamp(-0.02f, zoomTarget - zoomLevel, 0.02f);
-			UpdateList::setCamera(camera, sf::Vector2f(450, 250) * zoomLevel);
+			UpdateList::setCamera(camera, Vector2f(450, 250) * zoomLevel);
 		}
 
 		if(!textVisible)
@@ -207,7 +199,7 @@ public:
 				//std::cout << "Entering room\n";
 
 				//Adjust camera
-				sf::Vector2f cameraPosition = camera->getGPosition();
+				Vector2f cameraPosition = camera->getGPosition();
 				if(section->grabCamera)
 					camera->setParent(other);
 				else
@@ -225,12 +217,12 @@ public:
 			}
 		} else if(other->getLayer() == SIGN) {
 			if(section != NULL && section->signText != "") {
-				text.setString(section->signText);
-				//text.setPosition(sf::Vector2f(-16 * section->signText.length(), 32));
-				textShape.setSize(sf::Vector2f(10 * section->signText.length(), 38));
+				textNode->setString(section->signText.c_str());
+				textNode->setPosition(Vector2f(-16.0 * section->signText.length(), 32));
+				textBackground->setSize(Vector2f(10.0 * section->signText.length(), 38));
 				textBackground->setHidden(false);
 				textBackground->setScale(getInverseScale());
-				textBackground->setPosition(sf::Vector2f(-4.0 * section->signText.length(), -80) / getScale());
+				textBackground->setPosition(Vector2f(-4.0 * section->signText.length(), -80) / getScale());
 				textVisible = true;
 			}
 		} else if(other->getLayer() == BOX)

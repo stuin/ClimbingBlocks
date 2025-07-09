@@ -19,6 +19,36 @@ enum CollisionLayer {
 	MENU,
 	MENUBUTTON
 };
+static std::vector<std::string> LAYER_NAMES = {
+	"BACKGROUND", "TREEMAP", "MAP", "TEMPMAP", "ANIMATED", "SIGN", "BUTTON",
+	"BOX", "PLAYER", "SECTION", "INPUT", "TEXT", "FOREGROUND", "MENU", "MENUBUTTON"
+};
+
+enum Textures {
+	invalidTexture,
+	solidTexture,
+	worldTexture,
+	decorTexture,
+	treeTexture,
+	playerTexture,
+	blocksTexture,
+	flagTexture,
+	yetiTexture,
+	tentTexture,
+	menuButtonsTexture,
+	backgroundTexture1,
+	backgroundTexture2,
+	backgroundTexture3,
+	backgroundTexture4,
+};
+static std::vector<std::string> TEXTURE_FILES = {
+	"#INVALID", "#SOLIDCOLOR",
+	"res/textures/world_tiles.png", "res/textures/decor_tiles.png", "res/textures/trees.png",
+	"res/textures/character.png", "res/textures/blocks.png","res/textures/flag.png",
+	"res/textures/sleeping_yeti.png","res/textures/tent.png", "res/textures/menu_buttons.png",
+	"res/textures/background1.png", "res/textures/background2.png", "res/textures/background3.png", "res/textures/background4.png",
+};
+
 
 enum Signals {
 	RESET_SECTION,

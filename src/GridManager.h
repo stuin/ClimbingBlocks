@@ -5,10 +5,10 @@ using json = nlohmann::json;
 #include "Skyrmion/tiling/GridMaker.h"
 #include "Skyrmion/util/VertexGraph.hpp"
 #include "Skyrmion/input/Settings.h"
-#include "Skyrmion/Node.h"
+#include "Skyrmion/core/Node.h"
 #include "indexes.h"
 
-class GridSection : public Vertex<4>, public DrawNode {
+class GridSection : public Vertex<4>, public Node {
 public:
 	sint id;
 	std::string file;
@@ -33,9 +33,9 @@ public:
 	int triggers = 0;
 	bool trigger = false;
 
-	sf::RectangleShape rect;
+	//sf::RectangleShape rect;
 
-	GridSection(GridSection *root, json data, Layer layer) : Vertex(root), DrawNode(rect, layer) {
+	GridSection(GridSection *root, json data, Layer layer) : Vertex(root), Node(layer) {
 
 		id = data.value("id", 0);
 		file = data.value("file", "");
@@ -65,19 +65,19 @@ public:
 		}
 		mapFile.close();
 
-		setSize(sf::Vector2i(width, height));
+		setSize(Vector2i(width, height));
 		setHidden(!Settings::getBool("/debug_sections"));
 		collideWith(BUTTON);
 	}
 
-	void updateSize(sf::Vector2i scale) {
+	void updateSize(Vector2i scale) {
 		setPosition((x + width/2.0) * scale.x, (y + height/2.0) * scale.y);
-		setSize(sf::Vector2i(width * scale.x, height * scale.y));
-		rect.setSize(sf::Vector2f(width * scale.x, height * scale.y));
-		//rect.setPosition(getPosition() - sf::Vector2f(width/2, height/2));
-		rect.setOutlineColor(sf::Color::Magenta);
-		rect.setOutlineThickness(1);
-		rect.setFillColor(sf::Color::Transparent);
+		setSize(Vector2i(width * scale.x, height * scale.y));
+		//rect.setSize(Vector2f(width * scale.x, height * scale.y));
+		//rect.setPosition(getPosition() - Vector2f(width/2, height/2));
+		//rect.setOutlineColor(COLOR_PURPLE);
+		//rect.setOutlineThickness(1);
+		//rect.setFillColor(COLOR_EMPTY);
 	}
 
 	void collide(Node *other) {
@@ -99,7 +99,7 @@ public:
 	int width = 0;
 	int height = 0;
 
-	GridManager(std::string file, Layer _layer, sf::Vector2i scale) {
+	GridManager(std::string file, Layer _layer, Vector2i scale) {
 		std::ifstream f(file);
 		world = json::parse(f);
 		root = new GridSection(NULL, world["maps"][0], _layer);
@@ -137,12 +137,13 @@ public:
 				next->y -= y;
 				next->updateSize(scale);
 
-				//std::cout << next->file << " " << next->tileOffset << "\n";
-				//std::cout << next->x << "," << next->y << "," << next->width << "," << next->height << "\n";
-				grid->reload(next->file, next->tileOffset, sf::Rect<int>(next->x, next->y, next->width, next->height));
+				std::cout << next->file << " " << next->tileOffset << "\n";
+				std::cout << next->x << "," << next->y << "," << next->width << "," << next->height << "\n";
+				if(next->x >= 0 && next->y >= 0)
+					grid->reload(next->file, next->tileOffset, Rect<int>(next->x, next->y, next->width, next->height));
 			}
 		}
-		//grid->printGrid();
+		grid->printGrid();
 	}
 
 	void readNeighbors(int i, GridSection *prev) {

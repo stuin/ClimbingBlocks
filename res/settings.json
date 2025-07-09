@@ -2,27 +2,27 @@
     "controls": {
         "menu": "ESCAPE",
         "menu&1": "JOYSTICKSTART",
-        "reset_room": "P",
+        "reset_room": "R",
         "reset_room&1": "JOYSTICKB",
         "zoom_in": "WHEELUP",
         "zoom_out": "WHEELDOWN"
     },
-    "debug_block_rotation": false,
-    "debug_sections": false,
     "movement": {
-        "down": "R",
+        "down": "S",
         "joystick": 1,
         "left": "A",
-        "right": "S",
+        "right": "D",
         "up": "W",
         "up&1": "SPACE",
         "up&2": "JOYSTICKA"
     },
+    "debug_block_rotation": false,
+    "debug_sections": false,
     "music_volume": 100,
     "save": {
         "active": false,
-        "section": 0,
-        "x": 0,
-        "y": 0
+        "section": 4,
+        "x": 5164,
+        "y": 4565
     }
 }

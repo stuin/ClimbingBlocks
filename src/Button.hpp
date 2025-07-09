@@ -4,7 +4,7 @@ class Button : public Node {
 	bool trigger = false;
 
 public:
-	Button(sf::Vector2f pos, bool player) : Node(BUTTON, sf::Vector2i(30, 8), true) {
+	Button(Vector2f pos, bool player) : Node(BUTTON, Vector2i(30, 8), true) {
 		setPosition(pos);
 
 		collideWith(PLAYER, player);

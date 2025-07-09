@@ -1,13 +1,14 @@
 #include "Skyrmion/tiling/TileMap.hpp"
-#include "Skyrmion/input/MovementFunctions.hpp"
+#include "Skyrmion/input/MovementSystems.h"
 
 class MovableBox : public Node, public PhysicsObject {
 	Indexer *collisionOn;
 	Indexer *collisionOff;
-	sf::Vector2f startPosition;
+	Vector2f startPosition;
 
 	Indexer *frictionMap;
 	float frictionValue = 1;
+	float rotation = 0;
 
 	PersonalPhysicsStats *physics = new PersonalPhysicsStats();
 	GlobalPhysicsStats *globalPhysics = new GlobalPhysicsStats();
@@ -17,33 +18,33 @@ class MovableBox : public Node, public PhysicsObject {
 	GridSection *mainSection = NULL;
 
 public:
-	MovableBox(Indexer *_collisionOn, Indexer *_collisionOff, Indexer *_friction, uint c, sf::Vector2f _startPosition, sf::Texture *blockTexture) :
-	Node(BOX, sf::Vector2i(16, 16)), collisionOn(_collisionOn), collisionOff(_collisionOff), startPosition(_startPosition),
+	MovableBox(Indexer *_collisionOn, Indexer *_collisionOff, Indexer *_friction, uint c, Vector2f _startPosition, int blockTexture) :
+	Node(BOX, Vector2i(16, 16)), collisionOn(_collisionOn), collisionOff(_collisionOff), startPosition(_startPosition),
 	frictionMap(_friction) {
 
 		setPosition(startPosition);
-		setScale(sf::Vector2f(3, 3));
-		setTexture(*blockTexture);
+		setScale(Vector2f(3, 3));
+		setTexture(blockTexture);
 		physics->weight = 0.2;
 		frictionValue = 0.85;
 
 		switch(c) {
 		case 'i': case 'i'+SNOW_OFFSET:
-			setTextureRect(sf::IntRect(0, 16, 16, 16));
+			setTextureIntRect(IntRect(0, 16, 16, 16));
 			frictionValue = 0.2;
 			physics->weight = 0.05;
 			break;
 		case 'w': case 'w'+SNOW_OFFSET:
-			setTextureRect(sf::IntRect(48, 0, 16, 16));
+			setTextureIntRect(IntRect(48, 0, 16, 16));
 			break;
 		case 'g': case 'g'+SNOW_OFFSET:
-			setTextureRect(sf::IntRect(32, 0, 16, 16));
+			setTextureIntRect(IntRect(32, 0, 16, 16));
 			physics->weight = 0.5;
 			break;
 		case 'm': case 'm'+SNOW_OFFSET:
-			setTextureRect(sf::IntRect(16, 16, 16, 16));
+			setTextureIntRect(IntRect(16, 16, 16, 16));
 			physics->weight = 0.5;
-			setScale(sf::Vector2f(5, 5));
+			setScale(Vector2f(5, 5));
 			break;
 		}
 
@@ -58,22 +59,22 @@ public:
 		Indexer *collision = tempPlatforms ? collisionOn : collisionOff;
 
 		//std::cout << pushDirection << "\n";
-		sf::Vector2f velocity = physics->pushDirection * (float)time;
-		velocity = PlatformFrictionMovement(getPosition(), velocity, getSize(), time,
+		Vector2f velocity = physics->pushDirection * (float)time;
+		velocity = platformFrictionMovement(getPosition(), velocity, getSize(), time,
 			physics->previous, collision, frictionMap, frictionValue, globalPhysics);
-		velocity = PlatformGravityMovement(getPosition(), velocity, getSize(), time, false,
+		velocity = platformGravityMovement(getPosition(), velocity, getSize(), time, false,
 			collision, globalPhysics, physics, colliding);
 		setPosition(getPosition() + velocity);
 		colliding.clear();
 
 		if(!Settings::getBool("/debug_block_rotation")) {
-			int floor = collision->getTile(getPosition() + sf::Vector2f(0, getSize().x/2+4));
+			int floor = collision->getTile(getPosition() + Vector2f(0, getSize().x/2+4));
 			if(floor == SLOPE_UPLEFT)
-				setRotation(-45);
+				rotation = -45;
 			else if(floor == SLOPE_UPRIGHT)
-				setRotation(45);
+				rotation = 45;
 			else
-				setRotation(0);
+				rotation = 0;
 		}
 	}
 

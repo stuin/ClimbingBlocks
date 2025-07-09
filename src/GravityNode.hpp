@@ -27,7 +27,7 @@ public:
 	bool isPlayer = false;
 	int snapSpeed = 2;
 
-	sf::Vector2f pushDirection = sf::Vector2f(0,0);
+	Vector2f pushDirection = Vector2f(0,0);
 	std::vector<GravityNode *> pushing;
 	float weight = 0;
 	float pushWeight = 0;
@@ -35,19 +35,19 @@ public:
 	Indexer *frictionMap;
 	float frictionValue = 1;
 
-	GravityNode(Indexer *_collision, Indexer *_friction, Layer layer, sf::Vector2i size) :
+	GravityNode(Indexer *_collision, Indexer *_friction, Layer layer, Vector2i size) :
 	Node(layer, size), collision(_collision), frictionMap(_friction) {
 
 	}
 
-	sf::Vector2f gravityVelocity(sf::Vector2f input, double time) {
+	Vector2f gravityVelocity(Vector2f input, double time) {
 		bool jumpInput = input.y < -0.5;
-		sf::Vector2f velocity = sf::Vector2f((input.x + pushDirection.x) * time, 0);
-		sf::Vector2f pos = getPosition();
-		sf::Vector2f foot = pos;
+		Vector2f velocity = Vector2f((input.x + pushDirection.x) * time, 0);
+		Vector2f pos = getPosition();
+		Vector2f foot = pos;
 		foot.y += getSize().y / 2 - 2;
-		sf::Vector2f footL = foot - sf::Vector2f(getSize().x / 2, 0);
-		sf::Vector2f footR = foot + sf::Vector2f(getSize().x / 2, 0);
+		Vector2f footL = foot - Vector2f(getSize().x / 2, 0);
+		Vector2f footR = foot + Vector2f(getSize().x / 2, 0);
 		foot.y += 6;
 
 		if(isPlayer && showDebug)
@@ -77,7 +77,7 @@ public:
 
 		//Check for wall
 		tempPlatforms = section != NULL && (section->trigger != section->invertTrigger);
-		sf::Vector2f collisionOffset = velocity + sf::Vector2f(velocity.x / std::abs(velocity.x) * getSize().x / 2, getSize().y / 4);
+		Vector2f collisionOffset = velocity + Vector2f(velocity.x / std::abs(velocity.x) * getSize().x / 2, getSize().y / 4);
 		if(verticalSpeed != 0 || foot.y - 8 < collision->snapPosition(foot).y) {
 			if(collision->getTile(pos + collisionOffset) == FULL)
 				velocity.x = 0;
@@ -92,8 +92,8 @@ public:
 
 		//Falling and jumping
 		foot += velocity;
-		footL = foot - sf::Vector2f(getSize().x / 4, 0);
-		footR = foot + sf::Vector2f(getSize().x / 4, 0);
+		footL = foot - Vector2f(getSize().x / 4, 0);
+		footR = foot + Vector2f(getSize().x / 4, 0);
 		if(isPlayer && showDebug)
 			std::cout << foot.x-pos.x << "," << foot.y-pos.y << ">t ";
 		int tileL = collision->getTile(footL);
@@ -133,8 +133,8 @@ public:
 		int tile = collision->getTile(foot);
 		if(tile != EMPTY && !(jumpInput && jumpTime < 0.2)) {
 
-			sf::Vector2f ground = collision->snapPosition(foot);
-			sf::Vector2f foot2 = foot - sf::Vector2f(0, 8);
+			Vector2f ground = collision->snapPosition(foot);
+			Vector2f foot2 = foot - Vector2f(0, 8);
 
 			//Allow for upwards slope
 			if(tile != EMPTY && tile != SLOPE_UPLEFT && tile != SLOPE_UPRIGHT &&
@@ -188,7 +188,7 @@ public:
 		pushWeight += weight;
 		velocity.x *= 1-std::clamp(0.0f, pushWeight * friction, 1.0f);
 
-		pushDirection = sf::Vector2f(0,0);
+		pushDirection = Vector2f(0,0);
 		for(GravityNode *other : pushing) {
 			other->pushDirection.x = velocity.x / time;
 			if(velocity.x > 0)
