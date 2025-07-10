@@ -1,5 +1,5 @@
 class Button : public Node {
-	GridSection *section = NULL;
+	WorldSection *section = NULL;
 	bool reset = true;
 	bool trigger = false;
 
@@ -29,7 +29,7 @@ public:
 
 	void collide(Node *object) {
 		if(object->getLayer() == SECTION) {
-			section = (GridSection *) object;
+			section = (WorldSection *) object;
 			collideWith(SECTION, false);
 		} else
 			reset = false;

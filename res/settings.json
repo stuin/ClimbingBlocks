@@ -20,9 +20,9 @@
     "debug_sections": false,
     "music_volume": 100,
     "save": {
-        "active": false,
-        "section": 4,
-        "x": 5164,
-        "y": 4565
+        "active": true,
+        "section": 102,
+        "x": 24702,
+        "y": 1301
     }
 }

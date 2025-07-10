@@ -21,7 +21,7 @@ class GravityNode : public Node {
 
 public:
 	Indexer *collision;
-	GridSection *section = NULL;
+	WorldSection *section = NULL;
 	std::vector<GravityNode *> colliding;
 	bool blocked = false;
 	bool isPlayer = false;

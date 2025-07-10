@@ -308,3 +308,4 @@ static const std::map<int, int> foregroundRandomIndex = {
 	{2, 5}
 };
 
+Node *spawnPlayer(Indexer *_collisionOn, Indexer *_collisionOff, Indexer *_friction);

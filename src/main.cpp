@@ -1,14 +1,14 @@
 #include <cstdlib>
 
+#include "Skyrmion/core/UpdateList.h"
+#include "Skyrmion/tiling/TileMap.hpp"
 #include "Skyrmion/tiling/SquareTiles.h"
 #include "Skyrmion/tiling/RandomNoise.hpp"
 #include "Skyrmion/util/AnimatedNode.hpp"
 
-#include "GridManager.h"
+#include "MovableBox.hpp"
 #include "indexes.h"
-#include "Player.hpp"
 #include "Button.hpp"
-#include "Menu.hpp"
 
 void initialize() {
 	std::srand(7802);
@@ -16,22 +16,12 @@ void initialize() {
 	//Load settings file
 	Settings::loadSettings("res/settings.json");
 
-	//Load backgrounds
-	Node background1(BACKGROUND, Vector2i(4096, 4096));
-	Node background2(BACKGROUND, Vector2i(4096, 4096));
-	Node background3(BACKGROUND, Vector2i(4096, 4096));
-	Node background4(BACKGROUND, Vector2i(4096, 4096));
-	background1.setTexture(backgroundTexture1);
-	background2.setTexture(backgroundTexture2);
-	background3.setTexture(backgroundTexture3);
-	background4.setTexture(backgroundTexture4);
-	UpdateList::addNode(&background4);
-	UpdateList::addNode(&background3);
-	UpdateList::addNode(&background2);
-	UpdateList::addNode(&background1);
+	std::function<GridSection*(GridSection *root, json data, Layer layer)> sectionFactory = [](GridSection *root, json data, Layer layer) {
+		return new WorldSection(root, data, layer);
+	};
 
 	//Load base tile maps
-	GridManager worldGrid("res/simple_world.json", SECTION, Vector2i(64, 64));
+	GridSectioner worldGrid("res/world.json", SECTION, Vector2i(64, 64), sectionFactory);
 	MapIndexer display(worldGrid.grid, displayIndex, -1);
 	//RandomIndexer display(new MapIndexer(worldGrid.grid, displayIndex, -1), randomizerIndex, -1);
 	LargeTileMap world(worldTexture, 32, 32, &display, MAP);
@@ -54,9 +44,9 @@ void initialize() {
 
 	//std::cout << EMPTY << FULL << SLOPE_UPLEFT << SLOPE_UPRIGHT << ONEWAY_UP << "\n";
 
-	int x = std::rand() / ((RAND_MAX + 1u) / 3);
+	sint x = std::rand() / ((RAND_MAX + 1u) / 3);
 	while(x < worldGrid.width) {
-		int y = 0;
+		sint y = 0;
 		bool wide = true;
 		while(y < worldGrid.height && growthMap.getTile(Vector2f(x,y)) == TREEEMPTY) {
 			if(growthMap.getTile(Vector2f(x+1,y)) != TREEEMPTY)
@@ -117,21 +107,14 @@ void initialize() {
 	UpdateList::addNodes(treeMap.getNodes());
 
 	//Player
-	Player player(collisionMapOn, collisionMapOff, frictionMap);
-	player.setTexture(playerTexture);
-	player.setPosition(Vector2f(0,0));
-	player.background1 = &background1;
-	player.background2 = &background2;
-	player.background3 = &background3;
-	player.background4 = &background4;
-	UpdateList::addNode(&player);
+	Node *player = spawnPlayer(collisionMapOn, collisionMapOff, frictionMap);
 
 	//Place player and boxes
 	Indexer scaleMap(worldGrid.grid, ' ', Vector2i(64, 64));
 	scaleMap.mapGrid([&player, &collisionMapOn, &collisionMapOff, &frictionMap, &treeGrid](uint c, Vector2f pos) {
 		uint s = c - SNOW_OFFSET;
-		if(c == 'P' && player.getPosition() == Vector2f(0,0))
-			player.setPosition(pos + Vector2f(32, 16));
+		if(c == 'P' && player->getPosition() == Vector2f(0,0))
+			player->setPosition(pos + Vector2f(32, 16));
 		else if(c == 'w' || s == 'w' || c == 'g' || s == 'g' || c == 'i' || s == 'i' || c == 'm' || s == 'm')
 			new MovableBox(collisionMapOn, collisionMapOff, frictionMap, c, pos + Vector2f(32, 16), blocksTexture);
 		else if(c == '_' || s == '_')
@@ -158,11 +141,10 @@ void initialize() {
 		} else if(c == '>' || s == '>' || c == '<' || s == '<' || c == 'f' || s == 'f') {
 			Node *sign = new Node(SIGN, Vector2i(64, 64));
 			sign->setPosition(pos + Vector2f(32, 32));
+			sign->setHidden(true);
 			UpdateList::addNode(sign);
 		}
 	});
-
-	Menu menu(menuButtonsTexture, &player);
 
 	//Finish engine setup
 	UpdateList::globalLayer(BACKGROUND);
@@ -171,6 +153,10 @@ void initialize() {
 	UpdateList::globalLayer(TEXT);
 	UpdateList::globalLayer(MENU);
 	UpdateList::globalLayer(MENUBUTTON);
+	UpdateList::hideLayer(INPUT);
+	UpdateList::hideLayer(MENU);
+
+	UpdateList::hideLayer(SECTION, !Settings::getBool("/debug_sections"));
 
 	//Start music
 	UpdateList::musicStream("res/snow_game_jam.mp3", Settings::getInt("/music_volume", 100));

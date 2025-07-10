@@ -1,3 +1,5 @@
+#include "indexes.h"
+
 class Menu : public Node {
 private:
 	//sf::RectangleShape backgroundShape;

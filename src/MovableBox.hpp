@@ -1,5 +1,7 @@
 #include "Skyrmion/tiling/TileMap.hpp"
 #include "Skyrmion/input/MovementSystems.h"
+#include "Skyrmion/input/Settings.h"
+#include "GridSection.hpp"
 
 class MovableBox : public Node, public PhysicsObject {
 	Indexer *collisionOn;
@@ -14,8 +16,8 @@ class MovableBox : public Node, public PhysicsObject {
 	GlobalPhysicsStats *globalPhysics = new GlobalPhysicsStats();
 	std::vector<PersonalPhysicsStats *> colliding;
 
-	GridSection *section = NULL;
-	GridSection *mainSection = NULL;
+	WorldSection *section = NULL;
+	WorldSection *mainSection = NULL;
 
 public:
 	MovableBox(Indexer *_collisionOn, Indexer *_collisionOff, Indexer *_friction, uint c, Vector2f _startPosition, int blockTexture) :
@@ -81,8 +83,8 @@ public:
 	void collide(Node *other) {
 		if(other->getLayer() == SECTION) {
 			if(mainSection == NULL)
-				mainSection = (GridSection *) other;
-			section = (GridSection *) other;
+				mainSection = (WorldSection *) other;
+			section = (WorldSection *) other;
 		} else if(other->getLayer() == BOX || other->getLayer() == PLAYER)
 			colliding.push_back(dynamic_cast<PhysicsObject*>(other)->getPhysics());
 	}

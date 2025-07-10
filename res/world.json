@@ -10,7 +10,8 @@
 		},
 		{
 			"id": 1,
-			"file": "res/world/flat.txt"
+			"file": "res/world/flat.txt",
+			"y_offset": 3
 		},
 		{
 			"id": 3,
@@ -47,7 +48,7 @@
 			"id": 8,
 			"file": "res/world/hill1.txt",
 			"right": 9,
-			"y_offset": -6,
+			"y_offset": -5,
 			"zoom": 4.0
 		},
 		{
@@ -61,13 +62,13 @@
 			"id": 10,
 			"file": "res/world/plain1.txt",
 			"right": 50,
-			"y_offset": 1
+			"y_offset": 3
 		},
 		{
 			"id": 50,
 			"file": "res/puzzles/climbing1_door.txt",
 			"up": 55,
-			"y_offset": -2,
+			"y_offset": -4,
 			"zoom": 3.0
 		},
 		{
@@ -85,7 +86,7 @@
 			"id": 52,
 			"file": "res/world/hill2.txt",
 			"right": 53,
-			"y_offset": -5
+			"y_offset": -4
 		},
 		{
 			"id": 53,
@@ -132,13 +133,14 @@
 			"id": 100,
 			"file": "res/ice_expansion/transition1.txt",
 			"up": 101,
-			"y_offset": 3,
+			"y_offset": 0,
 			"zoom": 3.0
 		},
 		{
 			"id": 101,
 			"file": "res/ice_expansion/transition2.txt",
 			"right": 102,
+			"y_offset": 3,
 			"tile_offset": 100
 		},
 		{
